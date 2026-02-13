@@ -1,0 +1,90 @@
+[workspace]
+members = [
+    "crates/common",
+    "crates/decoders",
+    "crates/indexer",
+    "crates/engine",
+    "crates/api",
+    "crates/notifier",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+authors = ["FlareEmissary Team"]
+license = "MIT"
+repository = "https://github.com/FlareEmissaryTeam/flare-emissary"
+
+[workspace.dependencies]
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# Blockchain
+alloy = { version = "1", features = [
+    "providers",
+    "provider-http",
+    "rpc-types",
+    "sol-types",
+    "json-abi",
+    "contract",
+    "transports",
+    "transport-http",
+    "signers",
+    "network",
+] }
+
+# Database
+sqlx = { version = "0.8", features = [
+    "runtime-tokio",
+    "tls-rustls",
+    "postgres",
+    "uuid",
+    "chrono",
+    "json",
+    "migrate",
+] }
+
+# Redis
+redis = { version = "0.27", features = ["tokio-comp", "connection-manager"] }
+
+# Web framework
+axum = { version = "0.8", features = ["json", "query"] }
+tower = { version = "0.5" }
+tower-http = { version = "0.6", features = ["cors", "trace", "limit"] }
+
+# Auth
+jsonwebtoken = "9"
+siwe = "0.6"
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Logging / tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Time
+chrono = { version = "0.4", features = ["serde"] }
+
+# Error handling
+thiserror = "2"
+anyhow = "1"
+
+# Config
+dotenvy = "0.15"
+
+# UUID
+uuid = { version = "1", features = ["v4", "serde"] }
+
+# HTTP client (for notification delivery)
+reqwest = { version = "0.12", features = ["json"] }
+
+# Internal crates
+flare-common = { path = "crates/common" }
+flare-decoders = { path = "crates/decoders" }
+flare-indexer = { path = "crates/indexer" }
+flare-engine = { path = "crates/engine" }
+flare-api = { path = "crates/api" }
+flare-notifier = { path = "crates/notifier" }

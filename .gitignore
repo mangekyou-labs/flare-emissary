@@ -1,0 +1,12 @@
+/target
+*.swp
+*.swo
+.env
+.DS_Store
+
+.ai-devkit.json
+AGENTS.md
+/docs
+.agent/
+
+flare-grant-proposal.md
