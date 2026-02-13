@@ -105,8 +105,17 @@ All configuration is via environment variables (or `.env` file):
 # Check all crates
 cargo check
 
-# Run tests
-cargo test
+# Run unit tests (no DB required)
+cargo test --workspace
+
+# Run integration tests (requires PostgreSQL)
+# Tests that hit the DB are `#[ignored]` by default
+cargo test --test integration -- --ignored --nocapture
+
+# Run pipeline benchmark (live RPC latency test)
+cargo run --bin benchmark
+# Custom settings:
+# FLARE_RPC_URL="..." BENCHMARK_BLOCKS=100 cargo run --bin benchmark
 
 # Lint
 cargo clippy --all-targets

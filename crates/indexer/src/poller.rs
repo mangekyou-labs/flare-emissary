@@ -1,5 +1,6 @@
 use std::time::Duration;
 
+use alloy::primitives::Address;
 use alloy::providers::{Provider, ProviderBuilder};
 use alloy::rpc::types::Filter;
 use chrono::{TimeZone, Utc};
@@ -18,6 +19,10 @@ pub struct BlockPoller {
     pool: PgPool,
     decoders: DecoderRegistry,
     reorg_detector: ReorgDetector,
+    /// Optional list of contract addresses to filter logs by.
+    /// When set, only logs from these addresses are fetched.
+    /// When empty, ALL logs for the block are fetched (unfiltered).
+    contract_addresses: Vec<Address>,
 }
 
 impl BlockPoller {
@@ -35,7 +40,21 @@ impl BlockPoller {
             pool,
             decoders: DecoderRegistry::new(),
             reorg_detector: ReorgDetector::new(reorg_window as usize),
+            contract_addresses: Vec::new(),
         }
+    }
+
+    /// Set the contract addresses to filter logs by.
+    /// Only logs emitted by these contracts will be fetched and decoded.
+    pub fn with_contract_addresses(mut self, addresses: Vec<Address>) -> Self {
+        if !addresses.is_empty() {
+            tracing::info!(
+                count = addresses.len(),
+                "Log filtering enabled — only fetching logs from resolved contract addresses"
+            );
+        }
+        self.contract_addresses = addresses;
+        self
     }
 
     /// Start the polling loop. Runs indefinitely until the task is cancelled.
@@ -127,10 +146,14 @@ impl BlockPoller {
             return Ok(vec![]);
         }
 
-        // Fetch logs for this block
-        let filter = Filter::new()
+        // Fetch logs for this block (filtered by contract addresses if available)
+        let mut filter = Filter::new()
             .from_block(block_number)
             .to_block(block_number);
+
+        if !self.contract_addresses.is_empty() {
+            filter = filter.address(self.contract_addresses.clone());
+        }
 
         let logs = provider.get_logs(&filter).await?;
 
@@ -162,7 +185,7 @@ impl BlockPoller {
     }
 
     /// Persist decoded events to the database.
-    async fn persist_events(&self, events: &[DecodedEvent]) -> anyhow::Result<()> {
+    pub async fn persist_events(&self, events: &[DecodedEvent]) -> anyhow::Result<()> {
         for event in events {
             sqlx::query(
                 r#"
@@ -187,7 +210,7 @@ impl BlockPoller {
     }
 
     /// Update the indexer's last processed block number.
-    async fn update_indexer_state(&self, block_number: u64) -> anyhow::Result<()> {
+    pub async fn update_indexer_state(&self, block_number: u64) -> anyhow::Result<()> {
         sqlx::query(
             r#"
             INSERT INTO indexer_state (chain, last_block)
@@ -204,7 +227,7 @@ impl BlockPoller {
     }
 
     /// Get the last indexed block number from the database.
-    async fn get_last_indexed_block(&self) -> anyhow::Result<Option<u64>> {
+    pub async fn get_last_indexed_block(&self) -> anyhow::Result<Option<u64>> {
         let row: Option<(i64,)> = sqlx::query_as(
             "SELECT last_block FROM indexer_state WHERE chain = $1",
         )
@@ -216,7 +239,7 @@ impl BlockPoller {
     }
 
     /// Mark events from a reorged block as invalid.
-    async fn rollback_events_from(&self, from_block: u64) -> anyhow::Result<()> {
+    pub async fn rollback_events_from(&self, from_block: u64) -> anyhow::Result<()> {
         sqlx::query(
             "UPDATE indexed_events SET is_reorged = true WHERE block_number >= $1 AND chain = $2",
         )

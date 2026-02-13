@@ -96,3 +96,6 @@ impl Default for DecoderRegistry {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod decoder_tests;

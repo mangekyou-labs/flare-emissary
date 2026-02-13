@@ -1,7 +1,10 @@
+use alloy::providers::ProviderBuilder;
+
 use flare_common::config::AppConfig;
 use flare_common::db;
 use flare_common::types::Chain;
 use flare_indexer::poller::BlockPoller;
+use flare_indexer::registry::FlareContractRegistry;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -26,6 +29,28 @@ async fn main() -> anyhow::Result<()> {
     sqlx::migrate!("../../migrations").run(&pool).await?;
     tracing::info!("Database migrations applied");
 
+    // Resolve contract addresses from the on-chain FlareContractRegistry
+    tracing::info!("Resolving contract addresses from FlareContractRegistry...");
+    let provider = ProviderBuilder::new()
+        .connect_http(config.flare_rpc_url.parse()?);
+    let registry = FlareContractRegistry::flare();
+    let resolved = match registry.resolve_all(&provider).await {
+        Ok(resolved) => {
+            tracing::info!(
+                count = resolved.len(),
+                "Contract address resolution successful"
+            );
+            resolved.all_addresses()
+        }
+        Err(e) => {
+            tracing::warn!(
+                error = %e,
+                "Failed to resolve contract addresses — falling back to unfiltered log fetching"
+            );
+            Vec::new()
+        }
+    };
+
     // Start block poller for Flare mainnet
     let mut poller = BlockPoller::new(
         config.flare_rpc_url.clone(),
@@ -33,7 +58,8 @@ async fn main() -> anyhow::Result<()> {
         Chain::Flare,
         pool,
         config.indexer_reorg_window,
-    );
+    )
+    .with_contract_addresses(resolved);
 
     tracing::info!("Starting block poller for Flare mainnet");
 

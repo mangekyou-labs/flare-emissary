@@ -3,6 +3,14 @@ name = "flare-indexer"
 version.workspace = true
 edition.workspace = true
 
+[[bin]]
+name = "flare-indexer"
+path = "src/main.rs"
+
+[[bin]]
+name = "benchmark"
+path = "src/bin/benchmark.rs"
+
 [dependencies]
 flare-common = { workspace = true }
 flare-decoders = { workspace = true }
