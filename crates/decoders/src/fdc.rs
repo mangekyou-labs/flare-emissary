@@ -1,4 +1,4 @@
-use alloy::primitives::{keccak256, Log, B256};
+use alloy::primitives::{B256, Log, keccak256};
 use chrono::{DateTime, Utc};
 use flare_common::types::{Chain, DecodedEvent, EventType};
 use serde_json::json;
@@ -54,9 +54,10 @@ impl EventDecoder for FdcDecoder {
 
         if *topic0 == self.attestation_requested {
             let request_id = log.topics().get(1).map(|t| format!("{:#x}", t));
-            let requester = log.topics().get(2).map(|t| {
-                format!("0x{}", alloy::hex::encode(&t.as_slice()[12..32]))
-            });
+            let requester = log
+                .topics()
+                .get(2)
+                .map(|t| format!("0x{}", alloy::hex::encode(&t.as_slice()[12..32])));
 
             Some(DecodedEvent {
                 tx_hash: String::new(),

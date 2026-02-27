@@ -114,7 +114,7 @@ pub struct DecodedEvent {
 }
 
 /// A monitored blockchain address.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub struct MonitoredAddress {
     pub id: Uuid,
     pub address: String,
@@ -125,7 +125,7 @@ pub struct MonitoredAddress {
 }
 
 /// A user in the system.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub struct User {
     pub id: Uuid,
     pub wallet_address: String,
@@ -136,7 +136,7 @@ pub struct User {
 }
 
 /// A user's alert subscription.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub struct Subscription {
     pub id: Uuid,
     pub user_id: Uuid,
@@ -149,7 +149,7 @@ pub struct Subscription {
 }
 
 /// A user's configured notification channel.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub struct NotificationChannel {
     pub id: Uuid,
     pub user_id: Uuid,
@@ -160,7 +160,7 @@ pub struct NotificationChannel {
 }
 
 /// A triggered alert.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub struct Alert {
     pub id: Uuid,
     pub subscription_id: Uuid,
@@ -171,7 +171,7 @@ pub struct Alert {
 }
 
 /// A notification queued for delivery.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub struct Notification {
     pub id: Uuid,
     pub alert_id: Uuid,
@@ -180,4 +180,65 @@ pub struct Notification {
     pub sent_at: Option<DateTime<Utc>>,
     pub error_detail: Option<String>,
     pub created_at: DateTime<Utc>,
+}
+
+/// Human-readable notification payload ready for delivery.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NotificationPayload {
+    /// Short title (e.g., "FTSO Price Epoch Finalized")
+    pub title: String,
+    /// Detailed body message
+    pub body: String,
+    /// Alert severity
+    pub severity: Severity,
+    /// Additional metadata for channel-specific formatting
+    pub metadata: serde_json::Value,
+}
+
+/// Typed representation of a subscription's `threshold_config` JSON.
+///
+/// All fields are optional — omitted fields mean "no constraint".
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct ThresholdConfig {
+    /// Minimum value (alert when value drops below)
+    pub min_value: Option<f64>,
+    /// Maximum value (alert when value rises above)
+    pub max_value: Option<f64>,
+    /// Percentage deviation from a baseline to trigger alert
+    pub deviation_pct: Option<f64>,
+    /// Number of consecutive blocks the threshold must be met (default: 1)
+    pub hysteresis_blocks: Option<u64>,
+    /// Cooldown period in seconds between alerts (default: 300 = 5 min)
+    pub cooldown_seconds: Option<u64>,
+}
+
+impl std::fmt::Display for Severity {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Severity::Info => write!(f, "info"),
+            Severity::Warning => write!(f, "warning"),
+            Severity::Critical => write!(f, "critical"),
+        }
+    }
+}
+
+impl std::fmt::Display for DeliveryStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DeliveryStatus::Pending => write!(f, "pending"),
+            DeliveryStatus::Sent => write!(f, "sent"),
+            DeliveryStatus::Failed => write!(f, "failed"),
+        }
+    }
+}
+
+impl std::fmt::Display for AddressType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AddressType::FtsoProvider => write!(f, "ftso_provider"),
+            AddressType::FassetAgent => write!(f, "fasset_agent"),
+            AddressType::GenericContract => write!(f, "generic_contract"),
+            AddressType::Eoa => write!(f, "eoa"),
+        }
+    }
 }

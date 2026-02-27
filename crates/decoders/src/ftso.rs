@@ -1,4 +1,4 @@
-use alloy::primitives::{keccak256, Log, B256};
+use alloy::primitives::{B256, Log, keccak256};
 use chrono::{DateTime, Utc};
 use flare_common::types::{Chain, DecodedEvent, EventType};
 use serde_json::json;
@@ -73,9 +73,10 @@ impl EventDecoder for FtsoDecoder {
                 }),
             })
         } else if *topic0 == self.vote_power_changed {
-            let provider = log.topics().get(1).map(|t| {
-                format!("0x{}", alloy::hex::encode(&t.as_slice()[12..32]))
-            });
+            let provider = log
+                .topics()
+                .get(1)
+                .map(|t| format!("0x{}", alloy::hex::encode(&t.as_slice()[12..32])));
             let new_vote_power = if log.data.data.len() >= 32 {
                 let bytes: [u8; 32] = log.data.data.as_ref()[..32].try_into().unwrap_or_default();
                 Some(alloy::primitives::U256::from_be_bytes(bytes).to_string())

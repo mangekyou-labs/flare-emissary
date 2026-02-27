@@ -234,7 +234,10 @@ mod tests {
 
         assert_eq!(resolved.len(), 2);
         assert!(!resolved.is_empty());
-        assert_eq!(*resolved.get("FtsoManager").unwrap(), Address::repeat_byte(0xAA));
+        assert_eq!(
+            *resolved.get("FtsoManager").unwrap(),
+            Address::repeat_byte(0xAA)
+        );
         assert!(resolved.get("Nonexistent").is_none());
         assert_eq!(resolved.all_addresses().len(), 2);
     }

@@ -23,7 +23,7 @@ async fn main() -> anyhow::Result<()> {
     let config = AppConfig::from_env()?;
 
     // Connect to database
-    let pool = db::create_pool(&config.database_url).await?;
+    let pool = db::create_pool(&config.database_url, config.db_max_connections).await?;
 
     // Run migrations
     sqlx::migrate!("../../migrations").run(&pool).await?;
@@ -31,8 +31,7 @@ async fn main() -> anyhow::Result<()> {
 
     // Resolve contract addresses from the on-chain FlareContractRegistry
     tracing::info!("Resolving contract addresses from FlareContractRegistry...");
-    let provider = ProviderBuilder::new()
-        .connect_http(config.flare_rpc_url.parse()?);
+    let provider = ProviderBuilder::new().connect_http(config.flare_rpc_url.parse()?);
     let registry = FlareContractRegistry::flare();
     let resolved = match registry.resolve_all(&provider).await {
         Ok(resolved) => {

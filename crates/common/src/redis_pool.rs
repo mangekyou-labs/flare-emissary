@@ -1,5 +1,5 @@
-use redis::aio::ConnectionManager;
 use redis::Client;
+use redis::aio::ConnectionManager;
 
 /// Create a Redis connection manager for async operations.
 pub async fn create_redis_pool(redis_url: &str) -> anyhow::Result<ConnectionManager> {

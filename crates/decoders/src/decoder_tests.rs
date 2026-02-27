@@ -4,7 +4,7 @@
 //! on-chain EVM log layout and verify that every decoder correctly extracts
 //! event types and decoded fields.
 
-use alloy::primitives::{keccak256, Address, Bytes, Log, LogData, B256, U256};
+use alloy::primitives::{Address, B256, Bytes, Log, LogData, U256, keccak256};
 use chrono::Utc;
 
 use flare_common::types::{Chain, EventType};
@@ -62,7 +62,9 @@ fn test_ftso_price_epoch_finalized() {
         CONTRACT,
     );
 
-    let event = decoder.decode(&log, BLOCK_NUMBER, now(), Chain::Flare).unwrap();
+    let event = decoder
+        .decode(&log, BLOCK_NUMBER, now(), Chain::Flare)
+        .unwrap();
     assert_eq!(event.event_type, EventType::PriceEpochFinalized);
     assert_eq!(event.block_number, BLOCK_NUMBER);
     assert_eq!(event.decoded_data["epoch_id"], epoch_id);
@@ -80,14 +82,22 @@ fn test_ftso_vote_power_changed() {
         CONTRACT,
     );
 
-    let event = decoder.decode(&log, BLOCK_NUMBER, now(), Chain::Flare).unwrap();
+    let event = decoder
+        .decode(&log, BLOCK_NUMBER, now(), Chain::Flare)
+        .unwrap();
     assert_eq!(event.event_type, EventType::VotePowerChanged);
 
     // Provider address is lowercased hex with 0x prefix
     let provider_str = event.decoded_data["provider"].as_str().unwrap();
-    assert!(provider_str.contains("abababab"), "expected provider address in decoded data, got {provider_str}");
+    assert!(
+        provider_str.contains("abababab"),
+        "expected provider address in decoded data, got {provider_str}"
+    );
 
-    assert_eq!(event.decoded_data["new_vote_power"].as_str().unwrap(), "500000");
+    assert_eq!(
+        event.decoded_data["new_vote_power"].as_str().unwrap(),
+        "500000"
+    );
 }
 
 #[test]
@@ -102,7 +112,9 @@ fn test_ftso_reward_epoch_started() {
         CONTRACT,
     );
 
-    let event = decoder.decode(&log, BLOCK_NUMBER, now(), Chain::Flare).unwrap();
+    let event = decoder
+        .decode(&log, BLOCK_NUMBER, now(), Chain::Flare)
+        .unwrap();
     assert_eq!(event.event_type, EventType::RewardEpochStarted);
     assert_eq!(event.decoded_data["epoch_id"], epoch_id);
 }
@@ -113,7 +125,11 @@ fn test_ftso_unknown_topic_returns_none() {
     let unknown_topic = keccak256("SomeUnknownEvent(uint256)");
 
     let log = build_log(vec![unknown_topic], vec![], CONTRACT);
-    assert!(decoder.decode(&log, BLOCK_NUMBER, now(), Chain::Flare).is_none());
+    assert!(
+        decoder
+            .decode(&log, BLOCK_NUMBER, now(), Chain::Flare)
+            .is_none()
+    );
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -133,11 +149,16 @@ fn test_fdc_attestation_requested() {
         CONTRACT,
     );
 
-    let event = decoder.decode(&log, BLOCK_NUMBER, now(), Chain::Flare).unwrap();
+    let event = decoder
+        .decode(&log, BLOCK_NUMBER, now(), Chain::Flare)
+        .unwrap();
     assert_eq!(event.event_type, EventType::AttestationRequested);
 
     let rid = event.decoded_data["request_id"].as_str().unwrap();
-    assert!(rid.contains("1111"), "expected request_id to contain 1111, got {rid}");
+    assert!(
+        rid.contains("1111"),
+        "expected request_id to contain 1111, got {rid}"
+    );
 
     let req = event.decoded_data["requester"].as_str().unwrap();
     assert!(req.contains("cccccc"), "expected requester addr, got {req}");
@@ -150,16 +171,24 @@ fn test_fdc_attestation_proved() {
     let request_id = B256::repeat_byte(0x22);
     let merkle_root = B256::repeat_byte(0x33);
 
-    let log = build_log(
-        vec![topic0, request_id, merkle_root],
-        vec![],
-        CONTRACT,
-    );
+    let log = build_log(vec![topic0, request_id, merkle_root], vec![], CONTRACT);
 
-    let event = decoder.decode(&log, BLOCK_NUMBER, now(), Chain::Flare).unwrap();
+    let event = decoder
+        .decode(&log, BLOCK_NUMBER, now(), Chain::Flare)
+        .unwrap();
     assert_eq!(event.event_type, EventType::AttestationProved);
-    assert!(event.decoded_data["request_id"].as_str().unwrap().contains("2222"));
-    assert!(event.decoded_data["merkle_root"].as_str().unwrap().contains("3333"));
+    assert!(
+        event.decoded_data["request_id"]
+            .as_str()
+            .unwrap()
+            .contains("2222")
+    );
+    assert!(
+        event.decoded_data["merkle_root"]
+            .as_str()
+            .unwrap()
+            .contains("3333")
+    );
 }
 
 #[test]
@@ -174,7 +203,9 @@ fn test_fdc_round_finalized() {
         CONTRACT,
     );
 
-    let event = decoder.decode(&log, BLOCK_NUMBER, now(), Chain::Flare).unwrap();
+    let event = decoder
+        .decode(&log, BLOCK_NUMBER, now(), Chain::Flare)
+        .unwrap();
     assert_eq!(event.event_type, EventType::RoundFinalized);
     assert_eq!(event.decoded_data["round_id"], round_id);
 }
@@ -195,9 +226,16 @@ fn test_fasset_collateral_deposited() {
         CONTRACT,
     );
 
-    let event = decoder.decode(&log, BLOCK_NUMBER, now(), Chain::Flare).unwrap();
+    let event = decoder
+        .decode(&log, BLOCK_NUMBER, now(), Chain::Flare)
+        .unwrap();
     assert_eq!(event.event_type, EventType::CollateralDeposited);
-    assert!(event.decoded_data["agent"].as_str().unwrap().contains("aaaaaa"));
+    assert!(
+        event.decoded_data["agent"]
+            .as_str()
+            .unwrap()
+            .contains("aaaaaa")
+    );
     assert_eq!(event.decoded_data["amount"].as_str().unwrap(), "1000000");
 }
 
@@ -213,9 +251,16 @@ fn test_fasset_collateral_withdrawn() {
         CONTRACT,
     );
 
-    let event = decoder.decode(&log, BLOCK_NUMBER, now(), Chain::Flare).unwrap();
+    let event = decoder
+        .decode(&log, BLOCK_NUMBER, now(), Chain::Flare)
+        .unwrap();
     assert_eq!(event.event_type, EventType::CollateralWithdrawn);
-    assert!(event.decoded_data["agent"].as_str().unwrap().contains("bbbbbb"));
+    assert!(
+        event.decoded_data["agent"]
+            .as_str()
+            .unwrap()
+            .contains("bbbbbb")
+    );
     assert_eq!(event.decoded_data["amount"].as_str().unwrap(), "500000");
 }
 
@@ -232,10 +277,22 @@ fn test_fasset_minting_executed() {
         CONTRACT,
     );
 
-    let event = decoder.decode(&log, BLOCK_NUMBER, now(), Chain::Flare).unwrap();
+    let event = decoder
+        .decode(&log, BLOCK_NUMBER, now(), Chain::Flare)
+        .unwrap();
     assert_eq!(event.event_type, EventType::MintingExecuted);
-    assert!(event.decoded_data["minter"].as_str().unwrap().contains("111111"));
-    assert!(event.decoded_data["agent"].as_str().unwrap().contains("222222"));
+    assert!(
+        event.decoded_data["minter"]
+            .as_str()
+            .unwrap()
+            .contains("111111")
+    );
+    assert!(
+        event.decoded_data["agent"]
+            .as_str()
+            .unwrap()
+            .contains("222222")
+    );
     assert_eq!(event.decoded_data["lots"].as_str().unwrap(), "10");
 }
 
@@ -252,10 +309,22 @@ fn test_fasset_redemption_requested() {
         CONTRACT,
     );
 
-    let event = decoder.decode(&log, BLOCK_NUMBER, now(), Chain::Flare).unwrap();
+    let event = decoder
+        .decode(&log, BLOCK_NUMBER, now(), Chain::Flare)
+        .unwrap();
     assert_eq!(event.event_type, EventType::RedemptionRequested);
-    assert!(event.decoded_data["redeemer"].as_str().unwrap().contains("333333"));
-    assert!(event.decoded_data["agent"].as_str().unwrap().contains("444444"));
+    assert!(
+        event.decoded_data["redeemer"]
+            .as_str()
+            .unwrap()
+            .contains("333333")
+    );
+    assert!(
+        event.decoded_data["agent"]
+            .as_str()
+            .unwrap()
+            .contains("444444")
+    );
     assert_eq!(event.decoded_data["lots"].as_str().unwrap(), "5");
 }
 
@@ -265,15 +334,18 @@ fn test_fasset_liquidation_started() {
     let topic0 = keccak256("LiquidationStarted(address,uint256)");
     let agent = Address::repeat_byte(0x55);
 
-    let log = build_log(
-        vec![topic0, address_to_topic(agent)],
-        vec![],
-        CONTRACT,
-    );
+    let log = build_log(vec![topic0, address_to_topic(agent)], vec![], CONTRACT);
 
-    let event = decoder.decode(&log, BLOCK_NUMBER, now(), Chain::Flare).unwrap();
+    let event = decoder
+        .decode(&log, BLOCK_NUMBER, now(), Chain::Flare)
+        .unwrap();
     assert_eq!(event.event_type, EventType::LiquidationStarted);
-    assert!(event.decoded_data["agent"].as_str().unwrap().contains("555555"));
+    assert!(
+        event.decoded_data["agent"]
+            .as_str()
+            .unwrap()
+            .contains("555555")
+    );
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -285,13 +357,11 @@ fn test_generic_captures_any_event() {
     let decoder = GenericDecoder::new();
     let random_topic = keccak256("SomeRandomEvent(uint256,address)");
 
-    let log = build_log(
-        vec![random_topic],
-        encode_u256(42).to_vec(),
-        CONTRACT,
-    );
+    let log = build_log(vec![random_topic], encode_u256(42).to_vec(), CONTRACT);
 
-    let event = decoder.decode(&log, BLOCK_NUMBER, now(), Chain::Flare).unwrap();
+    let event = decoder
+        .decode(&log, BLOCK_NUMBER, now(), Chain::Flare)
+        .unwrap();
     assert_eq!(event.event_type, EventType::GenericEvent);
     assert!(event.decoded_data["topic0"].as_str().is_some());
     assert!(event.decoded_data["data"].as_str().is_some());
@@ -302,7 +372,11 @@ fn test_generic_ignores_empty_topics() {
     let decoder = GenericDecoder::new();
     // Log with no topics — most decoders require at least topic0
     let log = build_log(vec![], vec![], CONTRACT);
-    assert!(decoder.decode(&log, BLOCK_NUMBER, now(), Chain::Flare).is_none());
+    assert!(
+        decoder
+            .decode(&log, BLOCK_NUMBER, now(), Chain::Flare)
+            .is_none()
+    );
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -344,10 +418,24 @@ fn test_all_decoders_return_none_for_no_topics() {
     let generic = GenericDecoder::new();
 
     let log = build_log(vec![], vec![], CONTRACT);
-    assert!(ftso.decode(&log, BLOCK_NUMBER, now(), Chain::Flare).is_none());
-    assert!(fdc.decode(&log, BLOCK_NUMBER, now(), Chain::Flare).is_none());
-    assert!(fasset.decode(&log, BLOCK_NUMBER, now(), Chain::Flare).is_none());
-    assert!(generic.decode(&log, BLOCK_NUMBER, now(), Chain::Flare).is_none());
+    assert!(
+        ftso.decode(&log, BLOCK_NUMBER, now(), Chain::Flare)
+            .is_none()
+    );
+    assert!(
+        fdc.decode(&log, BLOCK_NUMBER, now(), Chain::Flare)
+            .is_none()
+    );
+    assert!(
+        fasset
+            .decode(&log, BLOCK_NUMBER, now(), Chain::Flare)
+            .is_none()
+    );
+    assert!(
+        generic
+            .decode(&log, BLOCK_NUMBER, now(), Chain::Flare)
+            .is_none()
+    );
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -359,13 +447,11 @@ fn test_registry_routes_ftso_event() {
     let registry = DecoderRegistry::new();
     let topic0 = keccak256("PriceEpochFinalized(uint256,uint256)");
 
-    let log = build_log(
-        vec![topic0, B256::from(encode_u256(100))],
-        vec![],
-        CONTRACT,
-    );
+    let log = build_log(vec![topic0, B256::from(encode_u256(100))], vec![], CONTRACT);
 
-    let event = registry.decode(&log, BLOCK_NUMBER, now(), Chain::Flare).unwrap();
+    let event = registry
+        .decode(&log, BLOCK_NUMBER, now(), Chain::Flare)
+        .unwrap();
     assert_eq!(event.event_type, EventType::PriceEpochFinalized);
 }
 
@@ -374,13 +460,11 @@ fn test_registry_routes_fdc_event() {
     let registry = DecoderRegistry::new();
     let topic0 = keccak256("RoundFinalized(uint256,bytes32)");
 
-    let log = build_log(
-        vec![topic0, B256::from(encode_u256(42))],
-        vec![],
-        CONTRACT,
-    );
+    let log = build_log(vec![topic0, B256::from(encode_u256(42))], vec![], CONTRACT);
 
-    let event = registry.decode(&log, BLOCK_NUMBER, now(), Chain::Flare).unwrap();
+    let event = registry
+        .decode(&log, BLOCK_NUMBER, now(), Chain::Flare)
+        .unwrap();
     assert_eq!(event.event_type, EventType::RoundFinalized);
 }
 
@@ -390,13 +474,11 @@ fn test_registry_routes_fasset_event() {
     let topic0 = keccak256("LiquidationStarted(address,uint256)");
     let agent = Address::repeat_byte(0xFF);
 
-    let log = build_log(
-        vec![topic0, address_to_topic(agent)],
-        vec![],
-        CONTRACT,
-    );
+    let log = build_log(vec![topic0, address_to_topic(agent)], vec![], CONTRACT);
 
-    let event = registry.decode(&log, BLOCK_NUMBER, now(), Chain::Flare).unwrap();
+    let event = registry
+        .decode(&log, BLOCK_NUMBER, now(), Chain::Flare)
+        .unwrap();
     assert_eq!(event.event_type, EventType::LiquidationStarted);
 }
 
@@ -406,7 +488,11 @@ fn test_registry_without_generic_skips_unknown() {
     let unknown = keccak256("NobodyKnowsThisEvent(bytes32)");
 
     let log = build_log(vec![unknown], vec![], CONTRACT);
-    assert!(registry.decode(&log, BLOCK_NUMBER, now(), Chain::Flare).is_none());
+    assert!(
+        registry
+            .decode(&log, BLOCK_NUMBER, now(), Chain::Flare)
+            .is_none()
+    );
 }
 
 #[test]
@@ -415,7 +501,9 @@ fn test_registry_with_generic_catches_unknown() {
     let unknown = keccak256("NobodyKnowsThisEvent(bytes32)");
 
     let log = build_log(vec![unknown], vec![], CONTRACT);
-    let event = registry.decode(&log, BLOCK_NUMBER, now(), Chain::Flare).unwrap();
+    let event = registry
+        .decode(&log, BLOCK_NUMBER, now(), Chain::Flare)
+        .unwrap();
     assert_eq!(event.event_type, EventType::GenericEvent);
 }
 
@@ -440,10 +528,14 @@ fn test_registry_decoded_event_has_correct_chain() {
 
     let log = build_log(vec![topic0, B256::from(encode_u256(1))], vec![], CONTRACT);
 
-    let flare_event = registry.decode(&log, BLOCK_NUMBER, now(), Chain::Flare).unwrap();
+    let flare_event = registry
+        .decode(&log, BLOCK_NUMBER, now(), Chain::Flare)
+        .unwrap();
     assert_eq!(flare_event.chain, Chain::Flare);
 
-    let songbird_event = registry.decode(&log, BLOCK_NUMBER, now(), Chain::Songbird).unwrap();
+    let songbird_event = registry
+        .decode(&log, BLOCK_NUMBER, now(), Chain::Songbird)
+        .unwrap();
     assert_eq!(songbird_event.chain, Chain::Songbird);
 }
 
@@ -459,6 +551,12 @@ fn test_registry_decoded_event_has_correct_address() {
         custom_addr,
     );
 
-    let event = registry.decode(&log, BLOCK_NUMBER, now(), Chain::Flare).unwrap();
-    assert!(event.address.contains("dededede"), "expected contract address in event, got {}", event.address);
+    let event = registry
+        .decode(&log, BLOCK_NUMBER, now(), Chain::Flare)
+        .unwrap();
+    assert!(
+        event.address.contains("dededede"),
+        "expected contract address in event, got {}",
+        event.address
+    );
 }

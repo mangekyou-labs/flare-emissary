@@ -1693,6 +1693,7 @@ name = "flare-common"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "axum",
  "chrono",
  "dotenvy",
  "redis",
@@ -1722,6 +1723,7 @@ dependencies = [
 name = "flare-engine"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "chrono",
  "flare-common",
  "redis",

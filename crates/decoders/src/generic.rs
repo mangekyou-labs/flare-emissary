@@ -1,4 +1,4 @@
-use alloy::primitives::{Log, B256};
+use alloy::primitives::{B256, Log};
 use chrono::{DateTime, Utc};
 use flare_common::types::{Chain, DecodedEvent, EventType};
 use serde_json::json;

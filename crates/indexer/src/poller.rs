@@ -59,8 +59,7 @@ impl BlockPoller {
 
     /// Start the polling loop. Runs indefinitely until the task is cancelled.
     pub async fn run(&mut self) -> anyhow::Result<()> {
-        let provider = ProviderBuilder::new()
-            .connect_http(self.rpc_url.parse()?);
+        let provider = ProviderBuilder::new().connect_http(self.rpc_url.parse()?);
 
         // Determine starting block
         let mut current_block = self.get_last_indexed_block().await?.unwrap_or_else(|| {
@@ -127,15 +126,16 @@ impl BlockPoller {
 
         let block_hash = block.header.hash;
         let parent_hash = block.header.parent_hash;
-        let block_timestamp = Utc.timestamp_opt(block.header.timestamp as i64, 0)
+        let block_timestamp = Utc
+            .timestamp_opt(block.header.timestamp as i64, 0)
             .single()
             .unwrap_or_else(Utc::now);
 
         // Check for reorg (pass parent_hash to avoid a second RPC call)
-        if let Some(reorg_block) =
-            self.reorg_detector
-                .check_and_record(block_number, block_hash, parent_hash, provider)
-                .await?
+        if let Some(reorg_block) = self
+            .reorg_detector
+            .check_and_record(block_number, block_hash, parent_hash, provider)
+            .await?
         {
             tracing::warn!(
                 reorg_at = reorg_block,
@@ -228,12 +228,11 @@ impl BlockPoller {
 
     /// Get the last indexed block number from the database.
     pub async fn get_last_indexed_block(&self) -> anyhow::Result<Option<u64>> {
-        let row: Option<(i64,)> = sqlx::query_as(
-            "SELECT last_block FROM indexer_state WHERE chain = $1",
-        )
-        .bind(self.chain.to_string())
-        .fetch_optional(&self.pool)
-        .await?;
+        let row: Option<(i64,)> =
+            sqlx::query_as("SELECT last_block FROM indexer_state WHERE chain = $1")
+                .bind(self.chain.to_string())
+                .fetch_optional(&self.pool)
+                .await?;
 
         Ok(row.map(|(b,)| b as u64))
     }

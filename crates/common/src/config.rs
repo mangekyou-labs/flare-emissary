@@ -38,6 +38,9 @@ pub struct AppConfig {
 
     /// Email sender address
     pub email_from: Option<String>,
+
+    /// Maximum number of PostgreSQL connections in the pool (default: 20)
+    pub db_max_connections: u32,
 }
 
 impl AppConfig {
@@ -71,6 +74,10 @@ impl AppConfig {
             discord_bot_token: std::env::var("DISCORD_BOT_TOKEN").ok(),
             resend_api_key: std::env::var("RESEND_API_KEY").ok(),
             email_from: std::env::var("EMAIL_FROM").ok(),
+            db_max_connections: std::env::var("DB_MAX_CONNECTIONS")
+                .unwrap_or_else(|_| "20".to_string())
+                .parse()
+                .map_err(|_| anyhow::anyhow!("DB_MAX_CONNECTIONS must be a valid u32"))?,
         })
     }
 }

@@ -74,9 +74,7 @@ impl ReorgDetector {
     /// Walk back through the window to find the earliest block where the hash diverges.
     async fn find_divergence_point(&self, provider: &impl Provider) -> anyhow::Result<u64> {
         for (block_number, expected_hash) in self.window.iter().rev() {
-            let block = provider
-                .get_block_by_number((*block_number).into())
-                .await?;
+            let block = provider.get_block_by_number((*block_number).into()).await?;
 
             match block {
                 Some(b) if b.header.hash == *expected_hash => {
@@ -92,11 +90,7 @@ impl ReorgDetector {
 
         // If we walked through the entire window, the reorg is deeper than our window.
         // Return the oldest block in our window as the reorg point.
-        Ok(self
-            .window
-            .front()
-            .map(|(num, _)| *num)
-            .unwrap_or(0))
+        Ok(self.window.front().map(|(num, _)| *num).unwrap_or(0))
     }
 
     /// Current window size (number of tracked blocks).

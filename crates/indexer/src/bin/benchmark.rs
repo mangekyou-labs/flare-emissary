@@ -82,7 +82,10 @@ fn compute_stats(metrics: &[BlockMetrics]) -> AggregateStats {
     let avg_fetch_logs = metrics.iter().map(|m| m.fetch_logs_ms).sum::<f64>() / n as f64;
     let avg_decode = metrics.iter().map(|m| m.decode_ms).sum::<f64>() / n as f64;
     let avg_lag = metrics.iter().map(|m| m.lag_from_tip_ms).sum::<f64>() / n as f64;
-    let max_lag = metrics.iter().map(|m| m.lag_from_tip_ms).fold(0.0_f64, f64::max);
+    let max_lag = metrics
+        .iter()
+        .map(|m| m.lag_from_tip_ms)
+        .fold(0.0_f64, f64::max);
 
     let mut totals: Vec<f64> = metrics.iter().map(|m| m.total_ms).collect();
     totals.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -118,10 +121,16 @@ fn print_report(stats: &AggregateStats, wall_elapsed: Duration, rpc_url: &str) {
     println!("  Total Logs:         {}", stats.total_logs);
     println!("  Decoded Events:     {}", stats.total_decoded_events);
     println!("  Wall Clock Time:    {:.1}s", wall_elapsed.as_secs_f64());
-    println!("  Throughput:         {:.1} blocks/sec", stats.block_count as f64 / wall_elapsed.as_secs_f64());
+    println!(
+        "  Throughput:         {:.1} blocks/sec",
+        stats.block_count as f64 / wall_elapsed.as_secs_f64()
+    );
     println!();
     println!("  ── Pipeline Latency (per block) ──────────────────────────");
-    println!("  Fetch Block:        avg {:.1}ms", stats.avg_fetch_block_ms);
+    println!(
+        "  Fetch Block:        avg {:.1}ms",
+        stats.avg_fetch_block_ms
+    );
     println!("  Fetch Logs:         avg {:.1}ms", stats.avg_fetch_logs_ms);
     println!("  Decode:             avg {:.1}ms", stats.avg_decode_ms);
     println!("  Total (end-to-end): avg {:.1}ms", stats.avg_total_ms);
@@ -133,8 +142,16 @@ fn print_report(stats: &AggregateStats, wall_elapsed: Duration, rpc_url: &str) {
     println!("  max:   {:.1}ms", stats.max_total_ms);
     println!();
     println!("  ── Chain Tip Lag ────────────────────────────────────────");
-    println!("  avg lag:  {:.0}ms ({:.1}s)", stats.avg_lag_ms, stats.avg_lag_ms / 1000.0);
-    println!("  max lag:  {:.0}ms ({:.1}s)", stats.max_lag_ms, stats.max_lag_ms / 1000.0);
+    println!(
+        "  avg lag:  {:.0}ms ({:.1}s)",
+        stats.avg_lag_ms,
+        stats.avg_lag_ms / 1000.0
+    );
+    println!(
+        "  max lag:  {:.0}ms ({:.1}s)",
+        stats.max_lag_ms,
+        stats.max_lag_ms / 1000.0
+    );
     println!();
     println!("  ── Result ─────────────────────────────────────────────");
     println!(
@@ -171,8 +188,7 @@ async fn main() -> anyhow::Result<()> {
     println!("Blocks: {}", block_count);
     println!();
 
-    let provider = ProviderBuilder::new()
-        .connect_http(rpc_url.parse()?);
+    let provider = ProviderBuilder::new().connect_http(rpc_url.parse()?);
 
     let decoders = DecoderRegistry::new();
     let chain = Chain::Flare;
@@ -203,15 +219,14 @@ async fn main() -> anyhow::Result<()> {
         };
         let fetch_block_ms = fetch_block_start.elapsed().as_secs_f64() * 1000.0;
 
-        let block_timestamp = Utc.timestamp_opt(block.header.timestamp as i64, 0)
+        let block_timestamp = Utc
+            .timestamp_opt(block.header.timestamp as i64, 0)
             .single()
             .unwrap_or_else(Utc::now);
 
         // 2. Fetch logs
         let fetch_logs_start = Instant::now();
-        let filter = Filter::new()
-            .from_block(block_num)
-            .to_block(block_num);
+        let filter = Filter::new().from_block(block_num).to_block(block_num);
         let logs = provider.get_logs(&filter).await?;
         let fetch_logs_ms = fetch_logs_start.elapsed().as_secs_f64() * 1000.0;
 
@@ -238,7 +253,11 @@ async fn main() -> anyhow::Result<()> {
         if (block_num - start_block) % 10 == 0 {
             println!(
                 "  block #{} | {:.0}ms total | {} logs | {} decoded | lag {:.0}ms",
-                block_num, total_ms, logs.len(), decoded_count, lag_ms
+                block_num,
+                total_ms,
+                logs.len(),
+                decoded_count,
+                lag_ms
             );
         }
 

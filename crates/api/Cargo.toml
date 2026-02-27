@@ -3,6 +3,10 @@ name = "flare-api"
 version.workspace = true
 edition.workspace = true
 
+[[bin]]
+name = "flare-api"
+path = "src/main.rs"
+
 [dependencies]
 flare-common = { workspace = true }
 flare-engine = { workspace = true }

@@ -64,7 +64,7 @@ async fn test_persist_events_inserts_correctly(pool: PgPool) {
 
     // Verify events were inserted
     let count: (i64,) = sqlx::query_as(
-        "SELECT COUNT(*) FROM indexed_events WHERE block_number = 100 AND chain = 'flare'"
+        "SELECT COUNT(*) FROM indexed_events WHERE block_number = 100 AND chain = 'flare'",
     )
     .fetch_one(&pool)
     .await
@@ -74,7 +74,7 @@ async fn test_persist_events_inserts_correctly(pool: PgPool) {
 
     // Verify event types
     let rows: Vec<(String,)> = sqlx::query_as(
-        "SELECT event_type FROM indexed_events WHERE block_number = 100 ORDER BY log_index"
+        "SELECT event_type FROM indexed_events WHERE block_number = 100 ORDER BY log_index",
     )
     .fetch_all(&pool)
     .await
@@ -96,12 +96,11 @@ async fn test_persist_events_deduplication(pool: PgPool) {
     // Insert again — should not error (ON CONFLICT DO NOTHING)
     poller.persist_events(&events).await.unwrap();
 
-    let count: (i64,) = sqlx::query_as(
-        "SELECT COUNT(*) FROM indexed_events WHERE block_number = 200"
-    )
-    .fetch_one(&pool)
-    .await
-    .unwrap();
+    let count: (i64,) =
+        sqlx::query_as("SELECT COUNT(*) FROM indexed_events WHERE block_number = 200")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
 
     assert_eq!(count.0, 1, "Duplicate insert should be ignored");
 }

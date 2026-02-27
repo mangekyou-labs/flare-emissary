@@ -1,4 +1,4 @@
-use alloy::primitives::{keccak256, Log, B256};
+use alloy::primitives::{B256, Log, keccak256};
 use chrono::{DateTime, Utc};
 use flare_common::types::{Chain, DecodedEvent, EventType};
 use serde_json::json;
